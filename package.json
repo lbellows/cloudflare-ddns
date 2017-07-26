@@ -1,5 +1,5 @@
 {
-  "name": "dyn-dns",
+  "name": "cloudflare-ddns",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

@@ -6,6 +6,7 @@ cfDNS.UpdateDomainDNS(...)
 
 ## Config outline.
 You can get the keys from your cloudflare account or using the script.
+```
 {
 	"account":{
 		"email": "",
@@ -13,8 +14,8 @@ You can get the keys from your cloudflare account or using the script.
 	},
 	"records":[
 		{
-			"type": "", (A)
-			"key": "", (subdomain)
+			"type": "A",
+			"key": "subdomain",
 			"domainKey": "",
 			"recordKey": ""
 		},
@@ -22,9 +23,10 @@ You can get the keys from your cloudflare account or using the script.
 	],
 	"minuteInterval": 60
 }
+```
 
 ## Running the program
 After updating the config:
 ```
-node index.js
+node app.js
 ```

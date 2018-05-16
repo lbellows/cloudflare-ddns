@@ -1,41 +1,68 @@
-var con = require('manakin').local;
-var cf = require('./CloudFlareDDNS');
-var os = require('os');
-var config = require('./config.json');
+var axios = require('axios');
 
-con.warn.bright = true; // use bright yellow for `console.warn`
-con.error.bright = true; // use bright red for `console.error`
-con.success.bright = true; // use bright green for `console.success`
-con.info.bright = true; // use bright cyan for `console.info`
-con.log.bright = true; // use bright cyan for `console.info`
+module.exports = class CloudflareDDNS {
 
-con.warn('Starting...');
-var cfDNS = new cf(config.account.email, config.account.key);
-var mins = config.minuteInterval;
-var counter = 1;
+	constructor(authEmail, authKey) {
+		this.authEmail = authEmail;
+		this.authKey = authKey
+	}
 
-cf.PrintProgress(`[Minute(s) until next update] 0\\${mins}`);
+	static PrintProgress(progress) {
+		process.stdout.clearLine();
+		process.stdout.cursorTo(0);
+		process.stdout.write(progress);
+	}
 
-setInterval(() => {
-	cf.GetExternalIp().then(ip => {
-		con.log();
-		Promise.all(
-			config.records.map(record=> {
-				return cfDNS.UpdateDomainDNS(record.type, record.key, ip, record.domainKey, record.recordKey)
-					.then(res => {
-						con.log(`[Updated ${res.data.result.name} -> ${res.data.result.content}] ${new Date().toLocaleString()}`);
-					})
+	static GetExternalIp() {
+		return axios.get('https://api.ipify.org').then(res => {
+			return res.data;
+		});
+	}
+
+	GetAccountInfo() {
+		return axios.get(`https://api.cloudflare.com/client/v4/zones`,
+			{
+				headers: {
+					'X-Auth-Email': this.authEmail,
+					'X-Auth-Key': this.authKey
+				}
+			});
+	}
+
+	GetDomainDNS(domainKey) {
+		return axios.get(`https://api.cloudflare.com/client/v4/zones/${domainKey}/dns_records`,
+			{
+				headers: {
+					'X-Auth-Email': this.authEmail,
+					'X-Auth-Key': this.authKey
+				}
+			});
+	}
+
+	UpdateDomainDNS(recordType, recordKey, recordValue, domainKey, dnsRecordKey) {
+		return axios.put(`https://api.cloudflare.com/client/v4/zones/${domainKey}/dns_records/${dnsRecordKey}`,
+			{
+				'type': recordType,
+				'name': recordKey,
+				'content': recordValue
+			},
+			{
+				headers: {
+					'X-Auth-Email': this.authEmail,
+					'X-Auth-Key': this.authKey
+				}
+			}); 
+	}
+
+	PrintAccountInfo() {
+		return this.GetAccountInfo().then(res => {
+			console.log(res.data);
+			res.data.result.forEach(domain => {
+				cfDNS.GetDomainDNS(domain.id).then(record => {
+					console.log(record.data);
+				})
 			})
-		).then(() => {
-			cf.PrintProgress(`[Minute(s) until next update] 0\\${mins}`);
 		})
-	})
-}, mins * 60000);
+	}
 
-setInterval(() => {
-	cf.PrintProgress(`[Minute(s) until next update] ${counter}\\${mins}`);
-	if(counter >= mins)
-		counter = 1;
-	else
-		counter += 1;
-}, 60000);
+}

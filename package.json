@@ -11,6 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.2",
-    "manakin": "^0.4.7"
+    "manakin": "^0.4.8"
   }
 }

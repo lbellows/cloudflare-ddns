@@ -14,7 +14,20 @@ var cfDNS = new cf(config.account.email, config.account.key);
 var mins = config.minuteInterval;
 var counter = 1;
 
-cf.PrintProgress(`[Minute(s) until next update] 0\\${mins}`);
+cf.GetExternalIp().then(ip => {
+	con.log();
+	Promise.all(
+		config.records.map(record=> {
+			return cfDNS.UpdateDomainDNS(record.type, record.key, ip, record.domainKey, record.recordKey)
+				.then(res => {
+					con.log(`[Updated ${res.data.result.name} -> ${res.data.result.content}] ${new Date().toLocaleString()}`);
+					cf.PrintProgress(`[Minute(s) until next update] 0\\${mins}`);
+				})
+		})
+	)
+})
+
+
 
 setInterval(() => {
 	cf.GetExternalIp().then(ip => {

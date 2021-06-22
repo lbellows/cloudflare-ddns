@@ -23,6 +23,7 @@ cf.GetExternalIp().then(ip => {
 					con.log(`[Updated ${res.data.result.name} -> ${res.data.result.content}] ${new Date().toLocaleString()}`);
 					cf.PrintProgress(`[Minute(s) until next update] 0\\${mins}`);
 				})
+				.catch(e => console.error(JSON.stringify(e)))
 		})
 	)
 })
